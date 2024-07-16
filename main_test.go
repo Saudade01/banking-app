@@ -2,10 +2,10 @@ package main
 
 import (
 	"banking-app/config"
-	"banking-app/database"
 	"banking-app/models"
 	"banking-app/services"
 	"math/rand"
+	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -13,17 +13,27 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func init() {
+func TestMain(m *testing.M) {
 	// Testler için gerekli başlangıç ayarları
 	config.LoadConfig()
-	database.InitDB()
+	config.InitDB()
 	rand.Seed(time.Now().UnixNano()) // Rastgelelik için tohum
+
+	// Testleri çalıştır
+	code := m.Run()
+
+	// Veritabanı bağlantısını kapat
+	if config.DB != nil {
+		config.DB.Close()
+	}
+
+	os.Exit(code)
 }
 
 func TestCreateRandomUsers(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		user := models.Account{
-			Owner:    "User" + strconv.Itoa(i),
+			Owner:    "User" + strconv.Itoa(i) + strconv.Itoa(rand.Intn(1000)), // Benzersiz kullanıcı adı
 			Balance:  rand.Float64() * 1000,
 			Currency: "USD",
 		}
@@ -39,7 +49,7 @@ func TestRandomTransfers(t *testing.T) {
 	var accountIDs []int64
 	for i := 0; i < 5; i++ {
 		user := models.Account{
-			Owner:    "User-" + strconv.Itoa(i),
+			Owner:    "User-" + strconv.Itoa(i) + strconv.Itoa(rand.Intn(1000)), // Benzersiz kullanıcı adı
 			Balance:  rand.Float64() * 1000,
 			Currency: "USD",
 		}
